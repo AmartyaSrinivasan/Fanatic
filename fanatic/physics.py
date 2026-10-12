@@ -14,8 +14,12 @@ class World:
         self.box_max = box_max
         self.gravity = gravity
         self.restitution = restitution
+        self.held = False
 
     def step(self, dt):
+        if self.held:
+            return
+        
         self.ball.velocity += self.gravity * dt
         self.ball.position += self.ball.velocity * dt
 
@@ -28,3 +32,15 @@ class World:
                 if self.ball.position[i] + self.ball.radius > self.box_max[i]:
                     self.ball.position[i] = self.box_max[i] - self.ball.radius
                     self.ball.velocity[i] = -self.restitution * self.ball.velocity[i]
+
+    def grab(self):
+        self.held = True
+        self.ball.velocity = np.zeros(3)
+    def move_held(self, position):
+        if not self.held:
+            return
+        position = np.array(position, dtype=float)
+        self.ball.position = np.clip(position, self.box_min + self.ball.radius, self.box_max - self.ball.radius)
+    def release(self, velocity):
+        self.held=False
+        self.ball.velocity = np.array(velocity, dtype = float)
