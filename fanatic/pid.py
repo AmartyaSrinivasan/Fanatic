@@ -28,4 +28,4 @@ class PID:
     
     def reset(self):
         self.total=0
-        self.old=0.0
+        self.old=None
