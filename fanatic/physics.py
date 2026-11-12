@@ -6,6 +6,7 @@ class Ball:
     position: np.ndarray
     velocity: np.ndarray
     radius: float = 0.1
+    mass: float = 0.05
 
 class World:
     def __init__(self, ball, box_min, box_max, gravity, restitution=0.8):
