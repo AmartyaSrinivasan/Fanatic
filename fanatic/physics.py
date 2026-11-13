@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 import numpy as np
 
+
 @dataclass
 class Ball:
     position: np.ndarray
     velocity: np.ndarray
     radius: float = 0.1
     mass: float = 0.05
+
 
 class World:
     def __init__(self, ball, box_min, box_max, gravity, restitution=0.8):
@@ -20,13 +22,13 @@ class World:
     def step(self, dt):
         if self.held:
             return
-        
+
         self.ball.velocity += self.gravity * dt
         self.ball.position += self.ball.velocity * dt
 
         for i in range(3):
             if self.ball.velocity[i] < 0:
-                if self.ball.position[i] - self.ball.radius <self.box_min[i]:
+                if self.ball.position[i] - self.ball.radius < self.box_min[i]:
                     self.ball.position[i] = self.box_min[i] + self.ball.radius
                     self.ball.velocity[i] = -self.restitution * self.ball.velocity[i]
             if self.ball.velocity[i] > 0:
@@ -37,11 +39,15 @@ class World:
     def grab(self):
         self.held = True
         self.ball.velocity = np.zeros(3)
+
     def move_held(self, position):
         if not self.held:
             return
         position = np.array(position, dtype=float)
-        self.ball.position = np.clip(position, self.box_min + self.ball.radius, self.box_max - self.ball.radius)
+        self.ball.position = np.clip(
+            position, self.box_min + self.ball.radius, self.box_max - self.ball.radius
+        )
+
     def release(self, velocity):
-        self.held=False
-        self.ball.velocity = np.array(velocity, dtype = float)
+        self.held = False
+        self.ball.velocity = np.array(velocity, dtype=float)
