@@ -1,8 +1,9 @@
 import numpy as np
-from vpython import box, sphere, vector, rate, color, scene, mag
+from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow
 from fanatic.physics import Ball, World
 from fanatic.jet import JetModel
-from fanatic.fan import Fan, FanCommand
+from fanatic.fan import Fan
+from fanatic.interfaces import FanCommand
 import time
 
 fps = 60
@@ -15,21 +16,31 @@ def to_vec(arr):
 
 
 def run():
+    scene.width = 1200
+    scene.height = 770
+    scene.background = color.black
     box_min = np.array([-2.0, 0.0, -1.5])
     box_max = np.array([2.0, 3.0, 1.5])
     gravity = np.array([0.0, -9.81, 0.0])
 
-    fan = Fan(position = np.array([0.0, 0.5, 0.0]), tilt = 0.0, turn = 0.0, airflow = 7.4)
-    ball = Ball(
-        position=np.array([0.0, 3.0, 1.4]), velocity=np.array([0.0, 0.0, 0.0])
-    )
-    world = World(ball, box_min, box_max, gravity)
-    centre = (box_min + box_max) / 2
-    size = box_max - box_min
-    box(pos=to_vec(centre), size=to_vec(size), opacity=0.15, pickable=False)
+    
+    fan = Fan(position=[0.0, 0.5, 0.0], airflow=7.4)
+    ball = Ball(position=np.array([0.0, 0.7, 0.0]), velocity=np.zeros(3))
+    world = World(ball, box_min, box_max, gravity, fan=fan, jet=JetModel())
+    command = FanCommand(np.array([0.0, 0.5, 0.0]), 0.0, 0.0, 7.4)
+
+    fan_visual = cylinder(pos=to_vec(fan.position), axis=to_vec(0.08 * fan.direction()), radius=0.06, color=color.gray(0.6), pickable=False)
+    jet_visual = arrow(pos=to_vec(fan.position), axis=to_vec(0.4 * fan.direction()), shaftwidth=0.02, color=color.cyan, opacity=0.5, pickable=False)
     ball_visual = sphere(
         pos=to_vec(ball.position), radius=ball.radius, color=color.orange
     )
+
+    centre = (box_min + box_max) / 2
+    scene.center = to_vec(centre)
+    
+    size = box_max - box_min
+    box(pos=to_vec(centre), size=to_vec(size), opacity=0.15, pickable=False)
+
     history = []
 
     def record():
@@ -76,6 +87,10 @@ def run():
     while True:
         rate(fps)
         for _ in range(steps):
-            world.fan.apply(FanCommand(target_position=[0, 0.5, 0], tilt=0.0, turn=0.0, airflow=7.4), dt)
+            world.fan.apply(FanCommand(target_position=[0, 0.5, 0], tilt=0.0, turn=0.0, airflow=9.0), dt)
             world.step(dt)
         ball_visual.pos = to_vec(world.ball.position)
+        fan_visual.pos = to_vec(world.fan.position)
+        fan_visual.axis = to_vec(0.08 * world.fan.direction())
+        jet_visual.pos = to_vec(world.fan.position)
+        jet_visual.axis = to_vec(0.4 * world.fan.direction())

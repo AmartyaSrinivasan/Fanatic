@@ -76,7 +76,6 @@ class Fan:
         return self.dir
 
     def apply(self, command: FanCommand, dt: float):
-        # Move toward the target within speed and acceleration limits
         target = np.asarray(command.target_position, dtype=float)
         offset = target - self.position
         distance = np.linalg.norm(offset)
