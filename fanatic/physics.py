@@ -11,19 +11,27 @@ class Ball:
 
 
 class World:
-    def __init__(self, ball, box_min, box_max, gravity, restitution=0.8):
+    def __init__(self, ball, box_min, box_max, gravity, restitution=0.8, fan=None, jet=None):
         self.ball = ball
         self.box_min = box_min
         self.box_max = box_max
         self.gravity = gravity
         self.restitution = restitution
         self.held = False
+        self.fan = fan
+        self.jet = jet
 
     def step(self, dt):
         if self.held:
             return
 
-        self.ball.velocity += self.gravity * dt
+        accel = self.gravity.copy()
+        if self.fan is not None and self.jet is not None:
+            force = self.jet.force_on_ball(
+                self.ball.position, self.ball.velocity, self.ball.radius,
+                self.fan.position, self.fan.direction(), self.fan.airflow)
+            accel += force / self.ball.mass
+        self.ball.velocity += accel * dt
         self.ball.position += self.ball.velocity * dt
 
         for i in range(3):

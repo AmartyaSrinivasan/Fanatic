@@ -1,6 +1,9 @@
 import numpy as np
 from fanatic.physics import Ball, World
 import random
+from fanatic.fan import Fan
+from fanatic.interfaces import FanCommand
+from fanatic.jet import JetModel
 
 BOX_MIN = np.array([-10.0, 0.0, -10.0])
 BOX_MAX = np.array([10.0, 100.0, 10.0])
@@ -75,3 +78,13 @@ def test_move_held_clamps_inside_box():
     world.grab()
     world.move_held([1000.0, 1000.0, 1000.0])
     assert np.array_equal(world.ball.position, BOX_MAX - world.ball.radius)
+
+def test_hover():
+    fan = Fan(position = [0.0, 0.5, 0.0], airflow = 7.4, tilt = 0.0, turn  = 0.0)
+    jet = JetModel()
+    ball = Ball(position = np.array([0.0, 0.7, 0.0]), velocity=np.array([0.0,0.0,0.0]))
+    world = World(ball=ball, jet=jet, fan=fan, box_min=BOX_MIN.copy(), box_max=BOX_MAX.copy(), gravity=np.array([0.0, -9.81, 0.0]))
+    for i in range(240):
+        world.fan.apply(FanCommand([0.0,0.5,0.0], 0.0,0.0,7.4), 1/240)
+        world.step(1/240)
+    assert (np.linalg.norm(ball.position - [0.0,0.7,0.0])<0.05)

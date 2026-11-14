@@ -1,6 +1,8 @@
 import numpy as np
 from vpython import box, sphere, vector, rate, color, scene, mag
 from fanatic.physics import Ball, World
+from fanatic.jet import JetModel
+from fanatic.fan import Fan, FanCommand
 import time
 
 fps = 60
@@ -16,8 +18,10 @@ def run():
     box_min = np.array([-2.0, 0.0, -1.5])
     box_max = np.array([2.0, 3.0, 1.5])
     gravity = np.array([0.0, -9.81, 0.0])
+
+    fan = Fan(position = np.array([0.0, 0.5, 0.0]), tilt = 0.0, turn = 0.0, airflow = 7.4)
     ball = Ball(
-        position=np.array([-1.0, 3.0, 1.4]), velocity=np.array([6.5, 3.0, -2.0])
+        position=np.array([0.0, 3.0, 1.4]), velocity=np.array([0.0, 0.0, 0.0])
     )
     world = World(ball, box_min, box_max, gravity)
     centre = (box_min + box_max) / 2
@@ -72,5 +76,6 @@ def run():
     while True:
         rate(fps)
         for _ in range(steps):
+            world.fan.apply(FanCommand(target_position=[0, 0.5, 0], tilt=0.0, turn=0.0, airflow=7.4), dt)
             world.step(dt)
         ball_visual.pos = to_vec(world.ball.position)
