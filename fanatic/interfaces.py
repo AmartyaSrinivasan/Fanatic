@@ -8,3 +8,13 @@ class FanCommand:
     tilt: float  # radians from straight up (+y)
     turn: float  # radians from +x, toward +z
     airflow: float  # nozzle speed, m/s
+
+@dataclass
+class Observation:
+    ball_position: np.ndarray
+    ball_velocity: np.ndarray
+    held: bool
+    gravity: np.ndarray
+    target: np.ndarray
+    fan_position: np.ndarray
+    fan_direction: np.ndarray
