@@ -59,3 +59,9 @@ class World:
     def release(self, velocity):
         self.held = False
         self.ball.velocity = np.array(velocity, dtype=float)
+
+    def in_contact(self, tol=0.001):
+        low = self.box_min + self.ball.radius
+        high = self.box_max - self.ball.radius
+        pos = self.ball.position
+        return bool(np.any((pos - low <= tol) | (high - pos <= tol)))

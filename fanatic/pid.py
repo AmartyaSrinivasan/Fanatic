@@ -11,7 +11,7 @@ class PID:
     def update(self, error, dt):
         p = self.kp * error
         i = self.ki * self.total
-        if self.old == None:
+        if self.old is None:
             d = 0.0
         else:
             d = (error - self.old) * self.kd / dt

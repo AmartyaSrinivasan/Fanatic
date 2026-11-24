@@ -25,10 +25,10 @@ def run():
     gravity = np.array([0.0, -9.81, 0.0])
 
     
-    fan = Fan(position=[0.0, 0.5, 0.0], airflow=7.4, max_speed = 15.0)
+    fan = Fan(position=[0.0, 0.5, 0.0], airflow=7.4, max_speed=20.0, max_accel=40.0,
+          max_ang_speed=12.0, max_ang_accel=60.0)
     ball = Ball(position=np.array([0.0, 0.7, 0.0]), velocity=np.zeros(3))
     world = World(ball, box_min, box_max, gravity, fan=fan, jet=JetModel())
-    command = FanCommand(np.array([0.0, 0.5, 0.0]), 0.0, 0.0, 7.4)
     controller = Controller(world.jet, ball.radius)
     fan_visual = cylinder(pos=to_vec(fan.position), axis=to_vec(0.08 * fan.direction()), radius=0.06, color=color.gray(0.6), pickable=False)
     jet_visual = arrow(pos=to_vec(fan.position), axis=to_vec(0.4 * fan.direction()), shaftwidth=0.02, color=color.cyan, opacity=0.5, pickable=False)
@@ -53,19 +53,13 @@ def run():
             return
         if mag(p - ball_visual.pos) < 4 * ball_visual.radius:
             world.grab()
+            scene.userzoom = False
+            scene.userspin = False
+            scene.userpan = False
             history.clear()
             record()
-        world.grab()
-        scene.userzoom = False
-        scene.userspin = False
-        scene.userpan = False
-        history.clear()
-        record()
 
     def on_move(evt):
-        scene.userzoom = True
-        scene.userspin = True
-        scene.userpan = True
         if not world.held:
             return
         p = scene.mouse.project(normal=scene.forward, point=ball_visual.pos)
@@ -78,6 +72,9 @@ def run():
             history.pop(0)
 
     def on_up(evt):
+        scene.userzoom = True
+        scene.userspin = True
+        scene.userpan = True
         now = time.perf_counter()
         while history and now - history[0][0] > 0.1:
             history.pop(0)
@@ -101,11 +98,20 @@ def run():
         rate(fps)
         for _ in range(steps):
             if world.held:
-                for i in controller.pids:
-                    i.reset()
+                controller.reset()
                 command = FanCommand(world.fan.position.copy(), world.fan.tilt, world.fan.turn, world.fan.airflow)
             else:
-                obs = Observation(ball_position = world.ball.position.copy(), ball_velocity = world.ball.velocity.copy(), held = world.held, gravity = world.gravity.copy(), target = target, fan_position = world.fan.position.copy(), fan_direction = world.fan.direction().copy())
+                obs = Observation(
+                    ball_position = world.ball.position.copy(), 
+                    ball_velocity = world.ball.velocity.copy(), 
+                    held = world.held, 
+                    gravity = world.gravity.copy(), 
+                    target = target, 
+                    fan_position = world.fan.position.copy(), 
+                    fan_direction = world.fan.direction().copy(),
+                    fan_airflow = world.fan.airflow,
+                    in_contact = world.in_contact(),
+                    )
                 command = controller.update(obs, dt)
             world.fan.apply(command, dt)
             world.step(dt)
