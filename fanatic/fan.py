@@ -45,7 +45,7 @@ class Fan:
         max_ang_speed: float = 6.0,
         max_ang_accel: float = 20.0,
         airflow_min: float = 0.0,
-        airflow_max: float = 20.0,
+        airflow_max: float = 40.0,
     ):
         self.position = (
             np.array(position, dtype=float) if position is not None else np.zeros(3)

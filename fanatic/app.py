@@ -1,5 +1,5 @@
 import numpy as np
-from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow
+from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow, slider, wtext
 from fanatic.physics import Ball, World
 from fanatic.jet import JetModel
 from fanatic.fan import Fan
@@ -35,6 +35,20 @@ def run():
     ball_visual = sphere(
         pos=to_vec(ball.position), radius=ball.radius, color=color.orange
     )
+
+
+    def set_mass(s):
+        world.ball.mass = s.value
+
+    def set_gravity(s):
+        world.gravity = np.array([0.0, -s.value, 0.0])
+
+    scene.append_to_caption("\nBall mass (kg)  ")
+    slider(bind=set_mass, min=0.02, max=0.15, value=0.05, length=300)
+    scene.append_to_caption("\nGravity (m/s²)  ")
+    slider(bind=set_gravity, min=2.0, max=15.0, value=9.81, length=300)
+    scene.append_to_caption("\n\n")
+    readout = wtext(text="")
 
     centre = (box_min + box_max) / 2
     scene.center = to_vec(centre)
@@ -115,6 +129,9 @@ def run():
                 command = controller.update(obs, dt)
             world.fan.apply(command, dt)
             world.step(dt)
+        readout.text = (f"True mass: {world.ball.mass:.3f} kg    "
+                        f"Estimated: {controller.estimator.mass:.3f} kg")
+        
         ball_visual.pos = to_vec(world.ball.position)
         fan_visual.pos = to_vec(world.fan.position)
         fan_visual.axis = to_vec(0.08 * world.fan.direction())
