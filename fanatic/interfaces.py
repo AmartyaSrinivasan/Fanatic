@@ -20,3 +20,4 @@ class Observation:
     fan_direction: np.ndarray
     fan_airflow: float
     in_contact: bool
+    view_direction: np.ndarray

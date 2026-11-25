@@ -1,5 +1,5 @@
 import numpy as np
-from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow, slider, wtext
+from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow, slider, wtext, label
 from fanatic.physics import Ball, World
 from fanatic.jet import JetModel
 from fanatic.fan import Fan
@@ -25,7 +25,7 @@ def run():
     gravity = np.array([0.0, -9.81, 0.0])
 
     
-    fan = Fan(position=[0.0, 0.5, 0.0], airflow=7.4, max_speed=20.0, max_accel=40.0,
+    fan = Fan(position=[0.0, 0.5, 0.0], airflow=7.4, max_speed=40.0, max_accel=80.0,
           max_ang_speed=12.0, max_ang_accel=60.0)
     ball = Ball(position=np.array([0.0, 0.7, 0.0]), velocity=np.zeros(3))
     world = World(ball, box_min, box_max, gravity, fan=fan, jet=JetModel())
@@ -35,7 +35,9 @@ def run():
     ball_visual = sphere(
         pos=to_vec(ball.position), radius=ball.radius, color=color.orange
     )
-
+    nag = label(text="Put the ball down.", height=24, color=color.red,
+                box=False, visible=False, pos=to_vec(ball.position))
+    
 
     def set_mass(s):
         world.ball.mass = s.value
@@ -111,22 +113,19 @@ def run():
     while True:
         rate(fps)
         for _ in range(steps):
-            if world.held:
-                controller.reset()
-                command = FanCommand(world.fan.position.copy(), world.fan.tilt, world.fan.turn, world.fan.airflow)
-            else:
-                obs = Observation(
-                    ball_position = world.ball.position.copy(), 
-                    ball_velocity = world.ball.velocity.copy(), 
-                    held = world.held, 
-                    gravity = world.gravity.copy(), 
-                    target = target, 
-                    fan_position = world.fan.position.copy(), 
-                    fan_direction = world.fan.direction().copy(),
-                    fan_airflow = world.fan.airflow,
-                    in_contact = world.in_contact(),
-                    )
-                command = controller.update(obs, dt)
+            obs = Observation(
+                ball_position = world.ball.position.copy(), 
+                ball_velocity = world.ball.velocity.copy(), 
+                held = world.held, 
+                gravity = world.gravity.copy(), 
+                target = target, 
+                fan_position = world.fan.position.copy(), 
+                fan_direction = world.fan.direction().copy(),
+                fan_airflow = world.fan.airflow,
+                in_contact = world.in_contact(),
+                view_direction=np.array([scene.forward.x, scene.forward.y, scene.forward.z]),
+                )
+            command = controller.update(obs, dt)
             world.fan.apply(command, dt)
             world.step(dt)
         readout.text = (f"True mass: {world.ball.mass:.3f} kg    "
@@ -137,4 +136,6 @@ def run():
         fan_visual.axis = to_vec(0.08 * world.fan.direction())
         jet_visual.pos = to_vec(world.fan.position)
         jet_visual.axis = to_vec(0.4 * world.fan.direction())
+        nag.visible = controller.is_grumpy
+        nag.pos = to_vec(world.fan.position + np.array([0.0, 0.4, 0.0]))
         
