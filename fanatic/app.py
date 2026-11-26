@@ -1,5 +1,5 @@
 import numpy as np
-from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow, slider, wtext, label
+from vpython import box, sphere, vector, rate, color, scene, mag, cylinder, arrow, slider, wtext, label, compound
 from fanatic.physics import Ball, World
 from fanatic.jet import JetModel
 from fanatic.fan import Fan
@@ -35,8 +35,20 @@ def run():
     ball_visual = sphere(
         pos=to_vec(ball.position), radius=ball.radius, color=color.orange
     )
+
     nag = label(text="Put the ball down.", height=24, color=color.red,
                 box=False, visible=False, pos=to_vec(ball.position))
+    skin = vector(0.95, 0.76, 0.6)
+    parts = [
+        box(pos=vector(0, 0, 0), size=vector(0.12, 0.08, 0.06), color=skin),          # fist
+        box(pos=vector(0, 0.09, 0.005), size=vector(0.026, 0.11, 0.026), color=skin), # middle finger
+        box(pos=vector(-0.045, 0.045, 0.02), size=vector(0.024, 0.024, 0.03), color=skin),  # folded knuckles
+        box(pos=vector(-0.02, 0.045, 0.02), size=vector(0.024, 0.024, 0.03), color=skin),
+        box(pos=vector(0.03, 0.045, 0.02), size=vector(0.024, 0.024, 0.03), color=skin),
+        box(pos=vector(0.0, -0.01, 0.04), size=vector(0.08, 0.022, 0.022), color=skin),  # thumb across the front
+    ]
+    hand = compound(parts, visible=False, pickable=False)
+    hand_yaw = 0.0
     
 
     def set_mass(s):
@@ -136,6 +148,14 @@ def run():
         fan_visual.axis = to_vec(0.08 * world.fan.direction())
         jet_visual.pos = to_vec(world.fan.position)
         jet_visual.axis = to_vec(0.4 * world.fan.direction())
+
         nag.visible = controller.is_grumpy
-        nag.pos = to_vec(world.fan.position + np.array([0.0, 0.4, 0.0]))
+        nag.pos = to_vec(world.fan.position + np.array([0.0, -0.3, 0.0]))
+        hand.visible = controller.is_grumpy
+        if hand.visible:
+            hand.pos = to_vec(world.fan.position + np.array([0.2, 0.0, 0.0]))
+            toward_user = -np.array([scene.forward.x, 0.0, scene.forward.z])
+            target_yaw = np.arctan2(toward_user[0], toward_user[2])
+            hand.rotate(angle=target_yaw - hand_yaw, axis=vector(0, 1, 0), origin=hand.pos)
+            hand_yaw = target_yaw
         
